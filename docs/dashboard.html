@@ -233,8 +233,8 @@
             <div id="chart-ratings"></div>
           </div>
           <div class="section-card">
-            <h4>Reviews by platform</h4>
-            <div id="chart-platforms"></div>
+            <h4>Top keywords by frequency</h4>
+            <div id="chart-keywords"></div>
           </div>
         </div>
         <div class="section-card">
@@ -540,10 +540,22 @@ function renderOverview() {
     return barRow("★".repeat(s),rc[s],mr,cls);
   }).join("");
 
-  // Platform dist
-  const pc={};filteredRows.forEach(r=>{pc[r.platform]=(pc[r.platform]||0)+1});
-  const mp=Math.max(1,...Object.values(pc));
-  document.getElementById("chart-platforms").innerHTML=Object.entries(pc).sort((a,b)=>b[1]-a[1]).map(([p,c])=>barRow(p,c,mp,"orange")).join("")||`<div style="color:var(--text-muted);font-size:12px">No data</div>`;
+  // Top keywords
+  const STOPWORDS = new Set(["the","and","is","in","it","of","to","a","i","my","for","was","this","that","with","have","but","are","not","so","they","be","had","on","at","we","you","me","he","she","as","do","an","or","by","get","has","his","her","its","our","their","from","all","one","there","when","up","about","out","if","more","no","just","got","very","did","can","will","been","your","then","what","also","would","some","even","only","than","too","could","into","after","now","am","back","how","other","which","time","us","them","use","any","really","com","get","still","much","every","good","great","bad","app","order","delivery","items","ordered","product","products","swiggy","instamart","review","star"]);
+  const wordCount={};
+  filteredRows.forEach(r=>{
+    const words=(r.text+" "+r.title).toLowerCase()
+      .replace(/[^a-z\s]/g," ")
+      .split(/\s+/)
+      .filter(w=>w.length>3&&!STOPWORDS.has(w));
+    words.forEach(w=>wordCount[w]=(wordCount[w]||0)+1);
+  });
+  const topWords=Object.entries(wordCount).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const maxW=Math.max(1,...topWords.map(e=>e[1]));
+  const kwColors=["orange","orange","orange","green","green","green","blue","blue","blue","purple","purple","purple"];
+  document.getElementById("chart-keywords").innerHTML=topWords.length
+    ? topWords.map(([w,c],i)=>barRow(w,c,maxW,kwColors[i]||"orange")).join("")
+    : `<div style="color:var(--text-muted);font-size:12px">No data</div>`;
 
   // Timeline
   const months={};filteredRows.forEach(r=>{if(r.year_month)months[r.year_month]=(months[r.year_month]||0)+1});
